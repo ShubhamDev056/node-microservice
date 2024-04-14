@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Define the enum for the OAuth provider
+enum UserOauthProvider {
+  GOOGLE
+  FACEBOOK
+  CUSTOM
+}
+
+// Define the User model
+model User {
+  id                    String            @id @default(uuid()) @map("_id") @db.ObjectId
+  oauth_provider        UserOauthProvider @default(CUSTOM)
+  oauth_uid             String?
+  first_name            String
+  last_name             String
+  email                 String            @unique
+  password              String
+  gender                String?
+  locale                String?
+  picture               String?
+  phone_number          String?
+  address               String?
+  role                  Int?              @default(0)
+  status                Int?              @default(1)
+  last_login_date       DateTime?
+  reset_password_token  String?
+  otp                   String?
+  reset_password_expiry String?
+  refreshTokens         RefreshToken[] // Relation to RefreshToken model
+  usersImages           UsersImages[] // Relation to UsersImages model
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+// Define the RefreshToken model
+model RefreshToken {
+  id          String   @id @default(uuid()) @map("_id") @db.ObjectId
+  hashedToken String
+  userId      String   @db.ObjectId // Foreign key to User model
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revoked     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Define the UsersImages model
+model UsersImages {
+  id        String   @id @default(uuid()) @map("_id") @db.ObjectId
+  image     String
+  userId    String   @db.ObjectId // Foreign key to User model
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
